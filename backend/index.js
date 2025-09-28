@@ -12,14 +12,14 @@ const app = express();
 dotenv.config();
 
 const port = process.env.PORT;
-const MONOGO_URL = process.env.MONOG_URI;
+const MONOGO_URL = process.env.MONGO_URI || process.env.MONOG_URI;
 
 //middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
@@ -28,16 +28,16 @@ app.use(
 app.use(
   fileUpload({
     useTempFiles: true,
-    tempFileDir: "/tmp/",
   })
 );
 
 // DB Code
 try {
-  mongoose.connect(MONOGO_URL);
-  console.log("Conntected to MonogDB");
+  await mongoose.connect(MONOGO_URL);
+  console.log("Connected to MongoDB");
 } catch (error) {
   console.log(error);
+  process.exit(1); // Exit if DB connection fails
 }
 
 // defining routes

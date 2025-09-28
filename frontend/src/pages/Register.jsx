@@ -66,9 +66,13 @@ function Register() {
       navigateTo("/");
     } catch (error) {
       console.log(error);
-      toast.error(
-        error.response.data.message || "Please fill the required fields"
-      );
+      if (error.code === 'ERR_NETWORK' || !error.response) {
+        toast.error("Server is not reachable. Please try again.");
+      } else {
+        toast.error(
+          error.response.data.message || "Please fill the required fields"
+        );
+      }
     }
   };
 
