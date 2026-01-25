@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 
 function MyBlogs() {
   const [myBlogs, setMyBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchMyBlogs = async () => {
       try {
@@ -12,75 +14,89 @@ function MyBlogs() {
           "http://localhost:4001/api/blogs/my-blog",
           { withCredentials: true }
         );
-        console.log(data);
-        setMyBlogs(data);
+        setMyBlogs(data || []);
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMyBlogs();
   }, []);
 
   const handleDelete = async (id) => {
-    await axios
-      .delete(`http://localhost:4001/api/blogs/delete/${id}`, {
-        withCredentials: true,
-      })
-      .then((res) => {
-        toast.success(res.data.message || "Blog deleted successfully");
-        setMyBlogs((value) => value.filter((blog) => blog._id !== id));
-      })
-      .catch((error) => {
-        toast.error(error.response.message || "Failed to delete blog");
-      });
+    try {
+      const res = await axios.delete(
+        `http://localhost:4001/api/blogs/delete/${id}`,
+        { withCredentials: true }
+      );
+      toast.success(res.data?.message || "Blog deleted");
+      setMyBlogs((prev) => prev.filter((b) => b._id !== id));
+    } catch (error) {
+      toast.error("Failed to delete blog");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="py-10 text-center text-gray-500">Loading your blogs...</div>
+    );
+  }
+
+  if (!myBlogs?.length) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-gray-600 font-semibold">
+          You haven’t posted any blog yet.
+        </p>
+        <p className="text-gray-500 text-sm mt-1">
+          Go to “Create Blog” and publish your first post.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="container mx-auto my-12 p-4">
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 md:ml-20">
-          {myBlogs && myBlogs.length > 0 ? (
-            myBlogs.map((element) => (
-              <div
-                className="bg-white shadow-lg rounded-lg overflow-hidden"
-                key={element._id}
-              >
-                {element?.blogImage && (
-                  <img
-                    src={element?.blogImage.url}
-                    alt="blogImg"
-                    className="w-full h-48 object-cover"
-                  />
-                )}
-                <div className="p-4">
-                  <span className="text-sm text-gray-600">
-                    {element.category}
-                  </span>
-                  <h4 className="text-xl font-semibold my-2">
-                    {element.title}
-                  </h4>
-                  <div className="flex justify-between mt-4">
-                    <Link
-                      to={`/blog/update/${element._id}`}
-                      className="text-blue-500 bg-white rounded-md shadow-lg px-3 py-1 border border-gray-400 hover:underline"
-                    >
-                      UPDATE
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(element._id)}
-                      className="text-red-500 bg-white rounded-md shadow-lg px-3 py-1 border border-gray-400 hover:underline"
-                    >
-                      DELETE
-                    </button>
-                  </div>
-                </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {myBlogs.map((blog) => (
+          <div
+            key={blog._id}
+            className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition"
+          >
+            <img
+              src={blog?.blogImage?.url || "/imgPL.webp"}
+              alt="blog"
+              className="w-full h-44 object-cover"
+            />
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                  {blog.category}
+                </span>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500">
-              You have not posted any blog to see!
-            </p>
-          )}
-        </div>
+
+              <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                {blog.title}
+              </h3>
+
+              <div className="flex gap-3 mt-4">
+                <Link
+                  to={`/blog/update/${blog._id}`}
+                  className="flex-1 text-center px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition text-sm font-semibold"
+                >
+                  Update
+                </Link>
+                <button
+                  onClick={() => handleDelete(blog._id)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-sm font-semibold"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

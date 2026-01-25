@@ -1,56 +1,114 @@
 import React from "react";
-import Navbar from "../src/components/Navbar";
-import Home from "../src/components/Home";
-import Footer from "../src/components/Footer";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import Blogs from "../src/pages/Blogs";
-import About from "../src/pages/About";
-import Contact from "../src/pages/Contact";
-import Login from "../src/pages/Login";
-import Register from "../src/pages/Register";
-import Dashboard from "../src/pages/Dashboard";
-import Creators from "./pages/Creators";
-import { useAuth } from "./context/AuthProvider";
 import { Toaster } from "react-hot-toast";
-import UpdateBlog from "./dashboard/UpdateBlog";
+
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Home from "./components/Home";
+
+import Blogs from "./pages/Blogs";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Creators from "./pages/Creators";
 import Detail from "./pages/Detail";
 import NotFound from "./pages/NotFound";
+
+import UpdateBlog from "./dashboard/UpdateBlog";
+import { useAuth } from "./context/AuthProvider";
+
+// ✅ Protected Route (login required)
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("jwt");
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+};
+
+// ✅ Admin-only Route (optional)
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem("jwt");
+  const { profile } = useAuth();
+
+  if (!token) return <Navigate to="/login" replace />;
+
+  if (profile?.user?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 function App() {
   const location = useLocation();
+
+  // ✅ hide navbar/footer on these pages
   const hideNavbarFooter = ["/dashboard", "/login", "/register"].includes(
     location.pathname
   );
-  const { blogs, isAuthenticated } = useAuth();
-  let token = localStorage.getItem("jwt"); // Retrieve the token directly from the localStorage to maininting the routes protect (Go to login.jsx)
-  console.log(blogs);
-  console.log(isAuthenticated); // it is not using because every page refresh it was redirected to /login
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       {!hideNavbarFooter && <Navbar />}
-      <Routes>
-        <Route
-          exact
-          path="/"
-          element={token ? <Home /> : <Navigate to={"/login"} />}
-        />
-        <Route exact path="/blogs" element={<Blogs />} />
-        <Route exact path="/about" element={<About />} />
-        <Route exact path="/contact" element={<Contact />} />
-        <Route exact path="/creators" element={<Creators />} />
-        <Route exact path="/login" element={<Login />} />
-        <Route exact path="/register" element={<Register />} />
-        <Route exact path="/dashboard" element={<Dashboard />} />
 
-        {/* Single page route */}
-        <Route exact path="/blog/:id" element={<Detail />} />
+      <div className="flex-1">
+        <Routes>
+          {/* ✅ Public Home (default) */}
+          <Route path="/" element={<Home />} />
 
-        {/* Update page route */}
-        <Route exact path="/blog/update/:id" element={<UpdateBlog />} />
+          {/* ✅ Public pages */}
+          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/creators" element={<Creators />} />
 
-        {/* Universal route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* ✅ Auth pages */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* ✅ Public single blog */}
+          <Route path="/blog/:id" element={<Detail />} />
+
+          {/* ✅ Protected: dashboard */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ Protected: update blog (user own pending OR admin any) */}
+          <Route
+            path="/blog/update/:id"
+            element={
+              <ProtectedRoute>
+                <UpdateBlog />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ✅ (Optional) Admin-only example route
+              अगर तुम future में admin-only pages बनाओ तो ऐसे wrap करना
+          */}
+          {/* 
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            }
+          /> 
+          */}
+
+          {/* ✅ 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+
       <Toaster />
       {!hideNavbarFooter && <Footer />}
     </div>

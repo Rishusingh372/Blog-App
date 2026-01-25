@@ -1,15 +1,8 @@
-import React from "react";
-
-// Tabnine:Edit|Test|Explain|Document|Ask
-
-function NotFound(){
-    return(
-    <div className="flex flex-col h-screen item-center justify-center">
-        <h1 className="text-2xl font-semibold">404</h1>
-        <span className="text-xl text-gray-800">Page Not found</span>
-    </div>
-    );
-    
-}
+const NotFound = () => (
+  <div className="h-screen flex items-center justify-center flex-col">
+    <h1 className="text-4xl font-bold">404</h1>
+    <p className="text-gray-600">Page Not Found</p>
+  </div>
+);
 
 export default NotFound;

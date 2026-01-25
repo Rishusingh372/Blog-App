@@ -1,161 +1,227 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { AiOutlineMenu } from "react-icons/ai";
-import { IoCloseSharp } from "react-icons/io5";
-import { useAuth } from "../context/AuthProvider";
 import axios from "axios";
+import React, { useMemo, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthProvider";
 
 function Navbar() {
-  const [show, setShow] = useState(false);
-
-  const { profile, isAuthenticated, setIsAuthenticated } = useAuth();
-  console.log(profile?.user);
   const navigateTo = useNavigate();
+  const { isAuthenticated, profile, setIsAuthenticated, setProfile } = useAuth();
+  const [open, setOpen] = useState(false);
 
-  const handleLogout = async (e) => {
-    e.preventDefault();
+  const user = profile?.user;
+  const role = user?.role;
+
+  const navClass = useMemo(
+    () => (isActive) =>
+      `px-4 py-2 rounded-xl text-sm font-semibold transition ${
+        isActive
+          ? "bg-blue-600 text-white"
+          : "text-gray-700 hover:bg-gray-100"
+      }`,
+    []
+  );
+
+  const handleLogout = async () => {
     try {
-      const { data } = await axios.get(
-        "http://localhost:4001/api/users/logout",
-        { withCredentials: true }
-      );
-      console.log(data);
-      localStorage.removeItem("jwt"); // deleting token in localStorage so that if user logged out it will goes to login page
-      toast.success(data.message);
+      await axios.get("http://localhost:4001/api/users/logout", {
+        withCredentials: true,
+      });
+
+      localStorage.removeItem("jwt");
       setIsAuthenticated(false);
+      setProfile(null);
+
+      toast.success("Logged out");
       navigateTo("/login");
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to logout");
+    } catch (err) {
+      toast.error("Logout failed");
     }
   };
 
   return (
-    <>
-      <nav className=" shadow-lg px-4 py-2">
-        <div className="flex items-center justify-between container mx-auto">
-          <div className="font-semibold text-xl">
-            Cilli<span className="text-blue-500">Blog</span>
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black">
+            CB
           </div>
-          {/* Desktop */}
-          <div className=" mx-6">
-            <ul className="hidden md:flex space-x-6">
-              <Link to="/" className="hover:text-blue-500">
-                HOME
-              </Link>
-              <Link to="/blogs" className="hover:text-blue-500">
-                BLOGS
-              </Link>
-              <Link to="/creators" className="hover:text-blue-500">
-                CREATORS
-              </Link>
-              <Link to="/about" className="hover:text-blue-500">
-                ABOUT
-              </Link>
-              <Link to="/contact" className="hover:text-blue-500">
-                CONTACT
-              </Link>
-            </ul>
-            <div className="md:hidden" onClick={() => setShow(!show)}>
-              {show ? <IoCloseSharp size={24} /> : <AiOutlineMenu size={24} />}
-            </div>
+          <div className="leading-tight">
+            <p className="font-extrabold text-gray-900">
+              Cilli<span className="text-blue-600">Blog</span>
+            </p>
+            <p className="text-xs text-gray-500 -mt-1">Write • Share • Grow</p>
           </div>
-          <div className="hidden md:flex space-x-2">
-            {isAuthenticated && profile?.user?.role === "admin" ? (
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-2">
+          <NavLink to="/" className={({ isActive }) => navClass(isActive)}>
+            Home
+          </NavLink>
+          <NavLink to="/blogs" className={({ isActive }) => navClass(isActive)}>
+            Blogs
+          </NavLink>
+          <NavLink to="/creators" className={({ isActive }) => navClass(isActive)}>
+            Creators
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => navClass(isActive)}>
+            About
+          </NavLink>
+          <NavLink to="/contact" className={({ isActive }) => navClass(isActive)}>
+            Contact
+          </NavLink>
+        </nav>
+
+        {/* Right section */}
+        <div className="hidden md:flex items-center gap-3">
+          {isAuthenticated ? (
+            <>
+              {/* User mini profile */}
               <Link
                 to="/dashboard"
-                className="bg-blue-600 text-white font-semibold hover:bg-blue-800 duration-300 px-4 py-2 rounded"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition"
               >
-                DASHBOARD
+                <img
+                  src={user?.photo?.url || "/default-avatar.png"}
+                  alt="avatar"
+                  className="w-9 h-9 rounded-full object-cover border"
+                />
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-gray-900 line-clamp-1">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">{role || "user"}</p>
+                </div>
               </Link>
-            ) : (
-              ""
-            )}
 
-            {!isAuthenticated ? (
               <Link
-                to="/Login"
-                className="bg-red-600 text-white font-semibold hover:bg-red-800 duration-300 px-4 py-2 rounded"
+                to="/dashboard"
+                className="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-black transition"
               >
-                LOGIN
+                Dashboard
               </Link>
-            ) : (
-              <div>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-600 text-white font-semibold hover:bg-red-800 duration-300 px-4 py-2 rounded"
-                >
-                  LOGOUT
-                </button>
-              </div>
-            )}
+
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-gray-50 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-xl border text-sm font-semibold hover:bg-gray-50 transition"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+              >
+                Register
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border hover:bg-gray-50"
+          onClick={() => setOpen((v) => !v)}
+          aria-label="Toggle Menu"
+        >
+          {open ? "✕" : "☰"}
+        </button>
+      </div>
+
+      {/* Mobile panel */}
+      {open && (
+        <div className="md:hidden border-t bg-white">
+          <div className="container mx-auto px-4 py-4 space-y-2">
+            <NavLink
+              to="/"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/blogs"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Blogs
+            </NavLink>
+            <NavLink
+              to="/creators"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Creators
+            </NavLink>
+            <NavLink
+              to="/about"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              About
+            </NavLink>
+            <NavLink
+              to="/contact"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) => navClass(isActive)}
+            >
+              Contact
+            </NavLink>
+
+            <div className="pt-3 border-t">
+              {isAuthenticated ? (
+                <div className="space-y-2">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="block w-full px-4 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold text-center"
+                  >
+                    Dashboard
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border text-sm font-semibold hover:bg-gray-50"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Link
+                    to="/login"
+                    onClick={() => setOpen(false)}
+                    className="block w-full px-4 py-3 rounded-xl border text-sm font-semibold text-center hover:bg-gray-50"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setOpen(false)}
+                    className="block w-full px-4 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold text-center hover:bg-blue-700"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        {/* mobile navbar */}
-        {show && (
-          <div className="bg-white">
-            <ul className="flex flex-col h-screen items-center justify-center space-y-3 md:hidden text-xl">
-              <Link
-                to="/"
-                onClick={() => setShow(!show)}
-                smooth="true"
-                duration={500}
-                offset={-70}
-                activeClass="active"
-                className="hover:text-blue-500"
-              >
-                HOME
-              </Link>
-              <Link
-                to="/blogs"
-                onClick={() => setShow(!show)}
-                smooth="true"
-                duration={500}
-                offset={-70}
-                activeClass="active"
-                className="hover:text-blue-500"
-              >
-                BLOGS
-              </Link>
-              <Link
-                to="/creators"
-                onClick={() => setShow(!show)}
-                smooth="true"
-                duration={500}
-                offset={-70}
-                activeClass="active"
-                className="hover:text-blue-500"
-              >
-                CREATORS
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setShow(!show)}
-                smooth="true"
-                duration={500}
-                offset={-70}
-                activeClass="active"
-                className="hover:text-blue-500"
-              >
-                ABOUT
-              </Link>
-              <Link
-                to="/contact"
-                onClick={() => setShow(!show)}
-                smooth="true"
-                duration={500}
-                offset={-70}
-                activeClass="active"
-                className="hover:text-blue-500"
-              >
-                CONTACT
-              </Link>
-            </ul>
-          </div>
-        )}
-      </nav>
-    </>
+      )}
+    </header>
   );
 }
 

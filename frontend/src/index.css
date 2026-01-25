@@ -17,3 +17,10 @@ h1,h2,h3,h4,h5,h6{
 span{
     font-family: 'Fredoka', sans-serif;
 }
+.nav-link {
+  color: #374151;
+  font-size: 0.95rem;
+}
+.nav-link:hover {
+  color: #2563eb;
+}
