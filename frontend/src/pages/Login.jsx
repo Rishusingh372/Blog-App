@@ -2,22 +2,24 @@ import axios from "axios";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthProvider";
+import Navbar from "../components/Navbar";
 
 function Login() {
+  const { setIsAuthenticated, setProfile } = useAuth();
   const navigateTo = useNavigate();
-  const { setIsAuthenticated, setProfile, fetchProfile } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(""); // ✅ required by backend
+  const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password || !role) {
-      toast.error("Email, Password and Role are required");
+      toast.error("Please fill all fields");
       return;
     }
 
@@ -32,21 +34,12 @@ function Login() {
         }
       );
 
-      // token optional, but you already use localStorage
       localStorage.setItem("jwt", data.token);
-
-      toast.success(data.message || "Login successful");
       setProfile(data);
       setIsAuthenticated(true);
 
-      // ✅ ensure profile sync (cookie-based)
-      await fetchProfile();
-
-      setEmail("");
-      setPassword("");
-      setRole("");
-
-      navigateTo("/"); // ✅ home open
+      toast.success(data.message || "Logged in successfully ✅");
+      navigateTo("/");
     } catch (error) {
       console.log(error);
       toast.error(error?.response?.data?.message || "Login failed");
@@ -55,64 +48,96 @@ function Login() {
     }
   };
 
+  const fadeUp = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white border rounded-2xl shadow-sm p-8">
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="font-semibold text-2xl text-center">
-            Cilli<span className="text-blue-600">Blog</span>
+    <>
+     <Navbar/>
+    
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.55 }}
+        className="w-full max-w-md bg-white border rounded-2xl shadow-sm p-8"
+      >
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mt-4">Welcome Back</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Login to continue to your dashboard.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleLogin} className="mt-7 space-y-4">
+          {/* Role */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Role</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="mt-2 w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
 
-          <h1 className="text-xl font-semibold">Login</h1>
+          {/* Email */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Email</label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-2 w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
 
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
-          >
-            <option value="">Select Role</option>
-            <option value="user">user</option>
-            <option value="admin">admin</option>
-          </select>
+          {/* Password */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">
+              Password
+            </label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-2 w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
 
-          <input
-            type="email"
-            placeholder="Your Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
-          />
-
-          <input
-            type="password"
-            placeholder="Your Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-200"
-          />
-
-          <p className="text-center text-sm text-gray-600">
-            New User?{" "}
-            <Link to={"/register"} className="text-blue-600 font-semibold">
-              Register Now
-            </Link>
-          </p>
-
-          <button
-            type="submit"
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
             disabled={loading}
-            className={`w-full py-3 rounded-xl text-white font-semibold transition
-              ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+            type="submit"
+            className={`w-full py-3 rounded-xl font-semibold text-white transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
             {loading ? "Logging in..." : "Login"}
-          </button>
+          </motion.button>
+
+          <p className="text-sm text-center text-gray-600">
+            New here?{" "}
+            <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+              Create account
+            </Link>
+          </p>
         </form>
-      </div>
+      </motion.div>
     </div>
+    </>
   );
 }
 

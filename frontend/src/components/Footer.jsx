@@ -63,7 +63,7 @@ function Footer() {
               <li>Email: rishu272018@gmail.com</li>
               <li>Location: Bhopal, MP, India</li>
               <li className="text-xs text-gray-500">
-                (You can edit these details anytime)
+                Built with React + Tailwind + Node + MongoDB
               </li>
             </ul>
           </div>
