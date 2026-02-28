@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthProvider";
 
+const API = import.meta.env.VITE_API_URL;
+
 function Detail() {
   const { id } = useParams();
   const { blogs } = useAuth();
@@ -122,7 +124,7 @@ function Detail() {
 
         // ✅ REAL BLOG: fetch from backend
         const { data } = await axios.get(
-          `http://localhost:4001/api/blogs/single-blog/${id}`,
+         `${API}/api/blogs/single-blog/${id}`,
           {
             withCredentials: true,
             headers: { "Content-Type": "application/json" },

@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthProvider";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+const API = import.meta.env.VITE_API_URL;
+
 function Register() {
   const { setIsAuthenticated, setProfile } = useAuth();
   const navigateTo = useNavigate();
@@ -102,7 +104,7 @@ function Register() {
     try {
       setLoading(true);
       const { data } = await axios.post(
-        "http://localhost:4001/api/users/register",
+       `${API}/api/users/register`,
         submitData,
         {
           withCredentials: true,

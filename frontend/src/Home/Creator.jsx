@@ -2,6 +2,8 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+const API = import.meta.env.VITE_API_URL;
+
 function Creators() {
   const [creators, setCreators] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,12 +11,9 @@ function Creators() {
   useEffect(() => {
     const fetchCreators = async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:4001/api/users/admins",
-          {
-            withCredentials: true,
-          }
-        );
+        const { data } = await axios.get(`${API}/api/users/admins`, {
+          withCredentials: true,
+        });
         setCreators(data?.admins || []);
       } catch (error) {
         console.log(error);
@@ -41,9 +40,7 @@ function Creators() {
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Popular Creators
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Popular Creators</h1>
           <p className="text-gray-600 mt-2">
             Meet the creators who publish quality blogs on our platform.
           </p>
@@ -75,9 +72,7 @@ function Creators() {
                     {creator?.name}
                   </h2>
 
-                  <p className="text-sm text-gray-500 mt-1">
-                    {creator?.email}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{creator?.email}</p>
 
                   <span className="inline-block mt-3 px-4 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                     {creator?.role}

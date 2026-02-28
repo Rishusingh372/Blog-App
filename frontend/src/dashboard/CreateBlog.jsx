@@ -65,16 +65,15 @@ function CreateBlog() {
       const token = localStorage.getItem("jwt");
 
       const { data } = await axios.post(
-        "http://localhost:4001/api/blogs/create",
+        `${import.meta.env.VITE_API_URL}/api/blogs/create`,
         formData,
         {
           withCredentials: true,
           headers: {
             "Content-Type": "multipart/form-data",
-            // ✅ optional header (in case server reads Bearer token)
             Authorization: token ? `Bearer ${token}` : undefined,
           },
-        }
+        },
       );
 
       toast.success(data?.message || "Blog created");
@@ -105,7 +104,7 @@ function CreateBlog() {
         toast.error(
           error?.response?.data?.message ||
             error?.response?.data?.error ||
-            "Forbidden: Not allowed"
+            "Forbidden: Not allowed",
         );
         return;
       }
@@ -113,7 +112,7 @@ function CreateBlog() {
       toast.error(
         error?.response?.data?.message ||
           error?.response?.data?.error ||
-          "Create blog failed"
+          "Create blog failed",
       );
     } finally {
       setLoading(false);
@@ -153,11 +152,7 @@ function CreateBlog() {
           <div>
             <label className="block mb-2 font-semibold">BLOG IMAGE</label>
             <img
-              src={
-                blogImagePreview
-                  ? blogImagePreview
-                  : "/imgPL.webp"
-              }
+              src={blogImagePreview ? blogImagePreview : "/imgPL.webp"}
               alt="Blog Main"
               className="w-full h-56 object-cover mb-4 rounded-xl border"
             />
@@ -191,7 +186,8 @@ function CreateBlog() {
           </button>
 
           <p className="text-xs text-gray-500 text-center">
-            Note: If you are a <b>User</b>, your blog will be <b>Pending</b> until Admin approves it.
+            Note: If you are a <b>User</b>, your blog will be <b>Pending</b>{" "}
+            until Admin approves it.
           </p>
         </form>
       </section>

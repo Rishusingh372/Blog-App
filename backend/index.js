@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: true,
+    origin: ["https://blog-app-five-sigma-33.vercel.app", "http://localhost:3000", "http://localhost:4001","http://localhost:5173/"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
