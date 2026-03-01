@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.DEV ? "" : import.meta.env.VITE_API_URL || "";
 
 function Creators() {
   const [creators, setCreators] = useState([]);

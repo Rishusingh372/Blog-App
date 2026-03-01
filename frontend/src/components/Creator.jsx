@@ -74,8 +74,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-const API =
-  import.meta.env.VITE_API_URL || "http://localhost:4001";
+const API = import.meta.env.DEV ? "" : import.meta.env.VITE_API_URL || "";
 
 const Creator = () => {
   const [creators, setCreators] = useState([]);

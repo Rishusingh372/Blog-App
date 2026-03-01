@@ -1,90 +1,26 @@
-// import axios from "axios";
-// import React, { createContext, useContext, useEffect, useState } from "react";
-
-// export const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [blogs, setBlogs] = useState([]);
-//   const [profile, setProfile] = useState(null);
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-//   const fetchProfile = async () => {
-//     try {
-//       const token = localStorage.getItem("jwt");
-//       if (!token) {
-//         setIsAuthenticated(false);
-//         setProfile(null);
-//         return;
-//       }
-
-//       const { data } = await axios.get(
-//         "http://localhost:4001/api/users/my-profile",
-//         {
-//           withCredentials: true,
-//           headers: { "Content-Type": "application/json" },
-//         }
-//       );
-
-//       setProfile(data);
-//       setIsAuthenticated(true);
-//     } catch (error) {
-//       setIsAuthenticated(false);
-//       setProfile(null);
-//     }
-//   };
-
-//   const fetchBlogs = async () => {
-//     try {
-//       const { data } = await axios.get("http://localhost:4001/api/blogs/all", {
-//         withCredentials: true,
-//       });
-//       setBlogs(data?.blogs || []);
-//     } catch (error) {
-//       setBlogs([]);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchBlogs();
-//     fetchProfile();
-//   }, []);
-
-//   return (
-//     <AuthContext.Provider
-//       value={{
-//         blogs,
-//         setBlogs,
-//         profile,
-//         setProfile,
-//         isAuthenticated,
-//         setIsAuthenticated,
-//         fetchBlogs,
-//         fetchProfile,
-//       }}
-//     >
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-
-
-
 import axios from "axios";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext();
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.DEV
+  ? ""
+  : import.meta.env.VITE_API_URL || "https://blog-app-say8.onrender.com";
+
+const axiosInstance = axios.create({
+  baseURL: API,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export const AuthProvider = ({ children }) => {
   const [blogs, setBlogs] = useState([]);
   const [profile, setProfile] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [corsError, setCorsError] = useState(false);
 
-  // ✅ fetch profile
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("jwt");
@@ -95,31 +31,47 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const { data } = await axios.get(
-        `${API}/api/users/my-profile`,
-        {
-          withCredentials: true,
-        }
-      );
+      const { data } = await axiosInstance.get("/api/users/my-profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setProfile(data);
       setIsAuthenticated(true);
+      setCorsError(false);
     } catch (error) {
+      console.error("Profile fetch error:", error);
+
+      if (error.code === "ERR_NETWORK" || error.message?.includes("CORS")) {
+        setCorsError(true);
+      }
+
       setIsAuthenticated(false);
       setProfile(null);
     }
   };
 
-  // ✅ fetch blogs
   const fetchBlogs = async () => {
     try {
-      const { data } = await axios.get(
-        `${API}/api/blogs/all`,
-        { withCredentials: true }
-      );
+      const token = localStorage.getItem("jwt");
+      const { data } = await axiosInstance.get("/api/blogs/all", {
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
 
       setBlogs(data?.blogs || []);
+      setCorsError(false);
     } catch (error) {
+      console.error("Blogs fetch error:", error);
+
+      if (error.code === "ERR_NETWORK" || error.message?.includes("CORS")) {
+        setCorsError(true);
+      }
+
       setBlogs([]);
     }
   };
@@ -140,9 +92,29 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated,
         fetchBlogs,
         fetchProfile,
+        corsError,
       }}
     >
       {children}
+      {corsError && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            background: "#ef4444",
+            color: "white",
+            padding: "15px 25px",
+            borderRadius: "8px",
+            zIndex: 9999,
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            maxWidth: "300px",
+          }}
+        >
+          <strong>CORS Error:</strong> Cannot connect to backend. Please check if the
+          server is running and CORS is configured correctly.
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
